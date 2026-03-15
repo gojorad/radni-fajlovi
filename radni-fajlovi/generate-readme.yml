@@ -1,0 +1,37 @@
+name: Generate README
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-readme:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Generate README
+        run: |
+          echo "# radni-fajlovi" > README.md
+          echo "" >> README.md
+          echo "## Files in repository" >> README.md
+          echo "" >> README.md
+          find . \
+            -path './.git' -prune -o \
+            -path './.github' -prune -o \
+            -name 'README.md' -prune -o \
+            -type f -print | sort | sed 's#^\./#- `#; s#$#`#' >> README.md
+
+      - name: Commit README
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git diff --cached --quiet || git commit -m "Auto-generate README"
+          git push
